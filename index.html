@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Generator & Data Collector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input, textarea {
+            width: 90%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        pre {
+            background: #eee;
+            padding: 10px;
+            text-align: left;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Form Generator & Data Collector</h2>
+        <button onclick="generateForm()">Generate Form Link</button>
+        <div id="generated_link"></div>
+
+        <h3>View Submitted Data</h3>
+        <button onclick="viewData()">View Submissions</button>
+        <div id="data_container"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://fevosovrlnxcafvfzqsx.supabase.co";
+        const SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZldm9zb3ZybG54Y2FmdmZ6cXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk2ODgwNzQsImV4cCI6MjA1NTI2NDA3NH0.KAXL-Vwq_MbfgErMlZN_R7NHlJw27r_CdluY0uw5Ojo";
+        
+        async function generateForm() {
+            let formId = Math.random().toString(36).substring(2, 10);
+            let formUrl = `https://yourwebsite.com/api/submit/${formId}`;
+
+            document.getElementById("generated_link").innerHTML = `
+                <p><strong>Your Form Link:</strong></p>
+                <input type="text" value="${formUrl}" readonly>
+                <p>Copy and use this in your HTML form:</p>
+                <pre>
+&lt;form action="${formUrl}" method="POST"&gt;
+    &lt;input type="text" name="name" placeholder="Your Name" required&gt;
+    &lt;input type="email" name="email" placeholder="Your Email" required&gt;
+    &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;
+                </pre>
+            `;
+
+            // Save the form link in Supabase
+            await fetch(`${SUPABASE_URL}/rest/v1/forms`, {
+                method: "POST",
+                headers: {
+                    "apikey": SUPABASE_API_KEY,
+                    "Authorization": `Bearer ${SUPABASE_API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ form_id: formId, url: formUrl })
+            });
+        }
+
+        async function viewData() {
+            let response = await fetch(`${SUPABASE_URL}/rest/v1/form_submissions`, {
+                headers: {
+                    "apikey": SUPABASE_API_KEY,
+                    "Authorization": `Bearer ${SUPABASE_API_KEY}`
+                }
+            });
+
+            let submissions = await response.json();
+            document.getElementById("data_container").innerHTML = `
+                <h3>Submitted Data</h3>
+                <pre>${JSON.stringify(submissions, null, 2)}</pre>
+            `;
+        }
+    </script>
+
+</body>
+</html>
